@@ -13,6 +13,8 @@ const postJobModels = require('../models/postJob.models');
 const jobPostController = {
     // Create a new job post
     createJobPost: async (req, res) => {
+
+        console.log("minimumQualification", req.body)
         try {
             console.log(req.body, ".................13");
             const { userId } = req.user
@@ -28,6 +30,8 @@ const jobPostController = {
             }
             // req.body.employerName = user.name;
             const jobPost = new JobPost(req.body);
+
+
 
             jobPost.createdBy = userId;
             const savedJobPost = await jobPost.save();
@@ -214,8 +218,8 @@ const jobPostController = {
                 let bookmarks = await bookmarkModel.find({ createdBy: userId, type: 'job' }).select('jobId -_id status');
                 console.log(bookmarks, "...............uuuu")
                 const bookmarkedJobIds = bookmarks
-  .filter(bookmark => bookmark.status)
-  .map(bookmark => bookmark.jobId.toString());
+                    .filter(bookmark => bookmark.status)
+                    .map(bookmark => bookmark.jobId.toString());
 
                 jobPosts = jobPosts.map((job) => ({
                     ...job.toObject(),
@@ -225,19 +229,19 @@ const jobPostController = {
 
 
             if (distanceRange) {
-                 console.log(distanceRange,"..............224")
+                console.log(distanceRange, "..............224")
                 function getJobsWithinDistance(userLat, userLng, jobs, maxDistanceKm) {
                     const EARTH_RADIUS_KM = 6371; // Radius of Earth in km
-                    console.log(userLat,"userLat")
-                     console.log(userLng,"userLng")
-                      console.log(jobs,"jobs")
-                       console.log(maxDistanceKm,"maxDistance")
+                    console.log(userLat, "userLat")
+                    console.log(userLng, "userLng")
+                    console.log(jobs, "jobs")
+                    console.log(maxDistanceKm, "maxDistance")
                     // Haversine formula
                     function calculateDistance(lat1, lng1, lat2, lng2) {
-                        console.log(lat1,"lat1")
-                        console.log(lng1,"lng1")
-                        console.log(lat2,"lat2")
-                        console.log(lng2,"lat2")
+                        console.log(lat1, "lat1")
+                        console.log(lng1, "lng1")
+                        console.log(lat2, "lat2")
+                        console.log(lng2, "lat2")
                         const toRad = (value) => (value * Math.PI) / 180;
 
                         const dLat = toRad(lat2 - lat1);
@@ -260,7 +264,7 @@ const jobPostController = {
                     });
                 }
 
-               jobPosts= getJobsWithinDistance(distanceRange.lat,distanceRange.lng,jobPosts,distanceRange.range);
+                jobPosts = getJobsWithinDistance(distanceRange.lat, distanceRange.lng, jobPosts, distanceRange.range);
 
             }
 
@@ -303,10 +307,10 @@ const jobPostController = {
     getJobPostByEmployerId: async (req, res) => {
         try {
             const { require } = req.query;
-            let jobPost = await JobPost.find({ createdBy: req.user.userId }),categories=null;
-            
-             if (require === 'all') {
-                jobPost = await JobPost.find({ createdBy: req.user.role==='employer'?req.user.userId:req.query.employerId });
+            let jobPost = await JobPost.find({ createdBy: req.user.userId }), categories = null;
+
+            if (require === 'all') {
+                jobPost = await JobPost.find({ createdBy: req.user.role === 'employer' ? req.user.userId : req.query.employerId });
             }
             else if (require === 'active') {
                 //  let currentDate=new Date().toLocaleString().substring(0,10)
@@ -317,8 +321,8 @@ const jobPostController = {
                     "workSchedule.startDate": { $gt: currentDate }
                 });
             }
-            else if(require==='category'){
-                 const currentDate = new Date().toISOString().split('T')[0];
+            else if (require === 'category') {
+                const currentDate = new Date().toISOString().split('T')[0];
 
                 jobPost = await JobPost.find({
                     createdBy: req.user.userId,
@@ -326,11 +330,11 @@ const jobPostController = {
                 });
                 console.log(jobPost[0])
                 console.log(".......326")
-                 categories=jobPost.map((item)=>({
-                    id:item._id,
-                    categoryName:item.jobDetails.jobCategory,
-                    createdAt:item.createdAt
-                 }));
+                categories = jobPost.map((item) => ({
+                    id: item._id,
+                    categoryName: item.jobDetails.jobCategory,
+                    createdAt: item.createdAt
+                }));
 
             }
 
@@ -339,7 +343,7 @@ const jobPostController = {
             if (!jobPost) {
                 return res.status(400).json({ success: false, message: 'Job post not found' });
             }
-            res.status(200).json({ success: true, data: jobPost,categories:categories });
+            res.status(200).json({ success: true, data: jobPost, categories: categories });
         } catch (error) {
             res.status(500).json({ success: false, message: 'Error retrieving job post', error: error.message });
         }
@@ -483,53 +487,54 @@ const jobPostController = {
     },
 
     //add the invitedCandidates to postjob model
-    addInvitedCandidates:async (req,res)=>{
-        try{
+    addInvitedCandidates: async (req, res) => {
+        try {
             //console.log(req.body,"..........req-body");
-            const user=await User.findOne({userId:req.body.userId});
-            console.log(user,"user")
-            const jobupdate=await postJobModels.findOneAndUpdate(
-                {'jobDetails.jobCategory':req.body.category,
-                'invitedCandidates':{$not:{$elemMatch:{userId:req.body.userId}}}
+            const user = await User.findOne({ userId: req.body.userId });
+            console.log(user, "user")
+            const jobupdate = await postJobModels.findOneAndUpdate(
+                {
+                    'jobDetails.jobCategory': req.body.category,
+                    'invitedCandidates': { $not: { $elemMatch: { userId: req.body.userId } } }
 
 
                 },
                 {
-                 $push: {
-      invitedCandidates: {
-        userId: user.userId,
-        name: user.name,
-        email: user.email,
-        contact: user.phoneNumber,
-        profession:'abcde'
-      }
-    }
-            },
-            {new:true}
-        
-        )
-            if(!jobupdate){
-                return res.status(400).json({success:false,message:"cannot invite this candidate.Invitation already sent"})
+                    $push: {
+                        invitedCandidates: {
+                            userId: user.userId,
+                            name: user.name,
+                            email: user.email,
+                            contact: user.phoneNumber,
+                            profession: 'abcde'
+                        }
+                    }
+                },
+                { new: true }
+
+            )
+            if (!jobupdate) {
+                return res.status(400).json({ success: false, message: "cannot invite this candidate.Invitation already sent" })
             }
             await jobupdate.save();
-            
-          let notification = {
-            title: "you have a new job invite",
-            body: `click the link and check.`,
-            link:`${process.env.CLIENT_URL}/applyingjob/${jobupdate._id}`,
-            type: "new job invite",
-            isRead: false,
-          };
-                            
-          await sendNotificationsToUsers([req.body.userId],notification);
-         await  updateDashboard(req.body.userId,"invite");
-          await  updateDashboard(req.user.userId,"invite");
 
-        return res.status(200).json({success:true,message:"invitation sent to candidate"})
+            let notification = {
+                title: "you have a new job invite",
+                body: `click the link and check.`,
+                link: `${process.env.CLIENT_URL}/applyingjob/${jobupdate._id}`,
+                type: "new job invite",
+                isRead: false,
+            };
+
+            await sendNotificationsToUsers([req.body.userId], notification);
+            await updateDashboard(req.body.userId, "invite");
+            await updateDashboard(req.user.userId, "invite");
+
+            return res.status(200).json({ success: true, message: "invitation sent to candidate" })
 
 
-        }catch(err){
-             return res.status(400).json({success:false,message:err.message})
+        } catch (err) {
+            return res.status(400).json({ success: false, message: err.message })
 
         }
     },
@@ -537,57 +542,57 @@ const jobPostController = {
 
 
     //get invites for a particular candidate and employer
-     getJobInvitations :async (req, res) => {
-  try {
-    //console.log("reached")
-    const user = await User.findOne({ userId: req.user.userId });
+    getJobInvitations: async (req, res) => {
+        try {
+            //console.log("reached")
+            const user = await User.findOne({ userId: req.user.userId });
 
-    //console.log(user,"..................531");
+            //console.log(user,"..................531");
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+            if (!user) {
+                return res.status(404).json({ success: false, message: "User not found" });
+            }
+
+            let invitations = [];
+
+            if (user.role === "employee") {
+                // ✅ Get all job posts where user was invited
+                invitations = await postJobModels.find({
+                    invitedCandidates: {
+                        $elemMatch: {
+                            userId: req.user.userId,
+                        },
+                    },
+                }).select('jobDetails.jobTitle jobDetails.jobAddress _id');
+            } else if (user.role === "employer") {
+                // ✅ Get all job posts created by this employer with invited candidates
+
+                const invitationsRaw = await postJobModels.find({
+                    createdBy: req.user.userId,
+                    invitedCandidates: { $exists: true, $ne: [] },
+                })
+                    .select('jobDetails.jobCategory invitedCandidates')
+                    .lean();
+                console.log(invitationsRaw, "invitationsRaw");
+                invitations = invitationsRaw.flatMap(job =>
+                    job.invitedCandidates.map(candidate => ({
+                        id: candidate._id,  // or candidate.id if that's the format
+                        name: candidate.name,
+                        email: candidate.email,
+                        profession: candidate.profession,
+                        jobCategory: job.jobDetails?.jobCategory || null,
+                    }))
+                );
+            } else {
+                return res.status(400).json({ success: false, message: "Invalid user role" });
+            }
+
+            return res.status(200).json({ success: true, invitations });
+
+        } catch (err) {
+            return res.status(400).json({ success: false, message: "internal server error" });
+        }
     }
-
-    let invitations = [];
-
-    if (user.role === "employee") {
-      // ✅ Get all job posts where user was invited
-      invitations = await postJobModels.find({
-        invitedCandidates: {
-          $elemMatch: {
-            userId: req.user.userId,
-          },
-        },
-      }).select('jobDetails.jobTitle jobDetails.jobAddress _id');
-    } else if (user.role === "employer") {
-      // ✅ Get all job posts created by this employer with invited candidates
-
-      const invitationsRaw = await postJobModels.find({
-  createdBy: req.user.userId,
-  invitedCandidates: { $exists: true, $ne: [] },
-})
-.select('jobDetails.jobCategory invitedCandidates')
-.lean(); 
-console.log(invitationsRaw,"invitationsRaw");
-invitations=invitationsRaw.flatMap(job =>
-  job.invitedCandidates.map(candidate => ({
-    id: candidate._id,  // or candidate.id if that's the format
-    name: candidate.name,
-    email: candidate.email,
-    profession: candidate.profession,
-    jobCategory: job.jobDetails?.jobCategory || null,
-  }))
-);
-    } else {
-      return res.status(400).json({ success: false, message: "Invalid user role" });
-    }
-
-    return res.status(200).json({ success: true, invitations });
-
-  } catch (err) {
-    return res.status(400).json({ success: false, message: "internal server error" });
-  }
-}
 
 
 
