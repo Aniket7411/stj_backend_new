@@ -150,7 +150,7 @@ exports.createCheckout=async (req, res,next) => {
   mode:'payment',
  // return_url:'https://stj-lime.vercel.app/',
   // success_url:'https://stj-lime.vercel.app/',
-    success_url:'https://stj-frontend-new-z7by.vercel.app/',
+    success_url:'https://stj-frontend-n.vercel.app/',
 
  
 
