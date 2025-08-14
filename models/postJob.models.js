@@ -99,7 +99,7 @@ const jobRequirementSchema = mongoose.Schema({
     minimumExp: { type: Number, default: 0 },
     maximumExp: { type: Number, default: 0 }, // Changed key to lowercase for consistency
     jobSkills: { type: [String], required: true }, // Array of strings for skills
-    dressCode: { type: String, required: true, default: "casual" },
+    dressCode: { type: String, required: true, default: "casuals" },
     resume: { type: String },
     coverLetter: { type: String },
     otherDocument: {
